@@ -47,8 +47,20 @@ def is_cell_empty(board, row, col):
 
     return board[row][col] == 0
 
-# Step 5 - place_move (not yet solved)
-# TODO: implement
+# Step 5 - place_move
+import numpy as np
+
+def place_move(board, row, col, player):
+    """Place player's mark at (row, col) and return the new board."""
+    # TODO: verify the cell is empty, then return a new board with the mark placed.
+    
+    if not is_cell_empty(board, row, col):
+        raise ValueError('cell is not empty')
+
+    new_board = board.copy()
+    new_board[row, col] = player
+
+    return new_board
 
 # Step 6 - get_legal_moves (not yet solved)
 # TODO: implement
