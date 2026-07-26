@@ -62,8 +62,19 @@ def place_move(board, row, col, player):
 
     return new_board
 
-# Step 6 - get_legal_moves (not yet solved)
-# TODO: implement
+# Step 6 - get_legal_moves
+import numpy as np
+
+def get_legal_moves(board):
+    """Return a list of (row, col) tuples for all empty cells on the board."""
+    # TODO: scan the 3x3 board in row-major order and collect coords of empties
+
+    legal = []
+    for r in range(3):
+        for c in range(3):
+            if is_cell_empty(board, r, c):
+                legal.append((r,c))
+    return legal
 
 # Step 7 - check_row_win (not yet solved)
 # TODO: implement
