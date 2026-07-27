@@ -156,8 +156,22 @@ def is_draw(board):
     
     return False
 
-# Step 13 - get_game_status (not yet solved)
-# TODO: implement
+# Step 13 - get_game_status
+import numpy as np
+
+def get_game_status(board):
+    """Return 'X_win', 'O_win', 'draw', or 'ongoing' for the given 3x3 board."""
+    # TODO: classify the board into one of the four status strings
+
+    if is_draw(board):
+        return 'draw'
+    else:
+        if is_winner(board, 1):
+            return 'X_win'
+        elif is_winner(board, -1):
+            return 'O_win'
+        else:
+            return 'ongoing'
 
 # Step 14 - get_current_player (not yet solved)
 # TODO: implement
