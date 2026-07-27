@@ -287,8 +287,18 @@ def random_move_agent(board, player, rng):
     index = rng.integers(len(legal_moves))
     return legal_moves[index]
 
-# Step 20 - play_random_vs_random_game (not yet solved)
-# TODO: implement
+# Step 20 - play_random_vs_random_game
+def play_random_vs_random_game(rng):
+    """Simulate one full random-vs-random game and return the final status."""
+    # TODO: loop until terminal, alternating random moves between X and O
+
+    game = TicTacToeGame()
+
+    while not game.is_terminal():
+        row, col = random_move_agent(game.board, game.current_player, rng)
+        game.step(row, col)
+
+    return game.status
 
 # Step 21 - play_random_vs_random_matches (not yet solved)
 # TODO: implement
