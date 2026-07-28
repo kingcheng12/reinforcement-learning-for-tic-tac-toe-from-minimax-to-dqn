@@ -532,8 +532,33 @@ def play_minimax_vs_random_matches(n_games, minimax_plays_x, rng):
 
     return compute_outcome_rates(statuses)
 
-# Step 30 - play_minimax_vs_minimax_matches (not yet solved)
-# TODO: implement
+# Step 30 - play_minimax_vs_minimax_matches
+def play_minimax_vs_minimax_matches(n_games):
+    """Play n_games minimax-vs-minimax games and report outcome rates plus an all_draws flag."""
+    # TODO: simulate n_games minimax-vs-minimax games and aggregate outcome rates.
+    statuses = []
+
+    player = 1
+
+    for _ in range(n_games):
+        game = TicTacToeGame()
+
+        while not game.is_terminal():
+            player = game.current_player
+            _, move = minimax_max_min_step(
+                game.board,
+                player,
+            )
+
+            row, col = move
+            game.step(row, col)
+
+        statuses.append(game.status)
+
+    results = compute_outcome_rates(statuses)
+    results['all_draws'] = results['draw_rate'] == 1 or n_games <= 0
+
+    return results
 
 # Step 31 - encode_board_state_key (not yet solved)
 # TODO: implement
