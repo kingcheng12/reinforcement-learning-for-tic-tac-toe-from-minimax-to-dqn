@@ -317,9 +317,9 @@ def compute_outcome_rates(outcomes):
     res_count = Counter(outcomes)
 
     results = {}
-    results['x_win_rate'] = res_count['X_win']/n_games if n_games > 0 else 0
-    results['o_win_rate'] = res_count['O_win']/n_games if n_games > 0 else 0
-    results['draw_rate'] = res_count['draw']/n_games if n_games > 0 else 0
+    results['x_win_rate'] = res_count['X_win']/n_games if n_games > 0 else 0.0
+    results['o_win_rate'] = res_count['O_win']/n_games if n_games > 0 else 0.0
+    results['draw_rate'] = res_count['draw']/n_games if n_games > 0 else 0.0
 
     return results
 
@@ -500,8 +500,37 @@ def minimax_alpha_beta(board, player, alpha, beta):
 
         return value, best_move
 
-# Step 29 - play_minimax_vs_random_matches (not yet solved)
-# TODO: implement
+# Step 29 - play_minimax_vs_random_matches
+def play_minimax_vs_random_matches(n_games, minimax_plays_x, rng):
+    # TODO: run n_games of minimax vs random and return aggregated outcome rates.
+    statuses = []
+
+    minimax_player = 1 if minimax_plays_x else -1
+
+    for _ in range(n_games):
+        game = TicTacToeGame()
+
+        while not game.is_terminal():
+            player = game.current_player
+
+            if player == minimax_player:
+                _, move = minimax_max_min_step(
+                    game.board,
+                    player,
+                )
+            else:
+                move = random_move_agent(
+                    game.board,
+                    player,
+                    rng,
+                )
+
+            row, col = move
+            game.step(row, col)
+
+        statuses.append(game.status)
+
+    return compute_outcome_rates(statuses)
 
 # Step 30 - play_minimax_vs_minimax_matches (not yet solved)
 # TODO: implement
