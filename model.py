@@ -650,8 +650,19 @@ def epsilon_greedy_explore_move(legal_actions, rng):
     index = rng.integers(len(legal_actions))
     return legal_actions[index]
 
-# Step 41 - epsilon_greedy_select_action (not yet solved)
-# TODO: implement
+# Step 41 - epsilon_greedy_select_action
+def epsilon_greedy_select_action(q_table, state_key, legal_actions, epsilon, rng):
+    """Choose an action via epsilon-greedy over the legal actions."""
+    # TODO: with probability epsilon explore, else pick the greedy legal action.
+    
+    p = rng.binomial(n=1, p=epsilon)
+
+    if p == 1:
+        move = epsilon_greedy_explore_move(legal_actions, rng)
+    else:
+        move = greedy_argmax_over_legal_actions(q_table, state_key, legal_actions, rng)
+    
+    return move
 
 # Step 42 - greedy_argmax_over_legal_actions
 def greedy_argmax_over_legal_actions(q_table, state_key, legal_actions, rng):
