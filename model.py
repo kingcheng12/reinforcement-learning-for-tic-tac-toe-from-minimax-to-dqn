@@ -780,8 +780,30 @@ def episode_agent_pick_action(q_table, board, current_player, epsilon, rng):
 
     return state_key, action_index
 
-# Step 50 - episode_apply_action (not yet solved)
-# TODO: implement
+# Step 50 - episode_apply_action
+def episode_apply_action(board, action, current_player, agent_player):
+    """Apply one move, return next_board/next_player/status/reward/done."""
+    # TODO: convert action to (row, col), place the move, then evaluate status and reward.
+    
+    row, col = action // 3, action % 3
+    board = place_move(board, row, col, current_player)
+
+    status = get_game_status(board)
+    done = status != "ongoing"
+
+    if done:
+        reward = minimax_terminal_score(status) * agent_player
+    else:
+        reward = 0
+
+    next_player = switch_player(current_player)
+
+    return {'next_board': board,
+            'next_player': next_player,
+            'status': status,
+            'reward': reward,
+            "done": done,
+            }
 
 # Step 51 - episode_apply_q_update (not yet solved)
 # TODO: implement
