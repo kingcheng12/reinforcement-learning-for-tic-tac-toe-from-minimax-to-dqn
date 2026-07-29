@@ -619,8 +619,11 @@ def choose_learning_rate_alpha():
 
     return 0.1
 
-# Step 37 - choose_discount_factor_gamma (not yet solved)
-# TODO: implement
+# Step 37 - choose_discount_factor_gamma
+def choose_discount_factor_gamma():
+    """Return the discount factor gamma in [0, 1] for Q-learning."""
+    # TODO: return a float discount factor in [0, 1] for tabular Q-learning.
+    return 0.9
 
 # Step 38 - choose_initial_epsilon (not yet solved)
 # TODO: implement
