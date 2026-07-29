@@ -589,8 +589,16 @@ def canonical_board_key(board):
     
     return min(keys)
 
-# Step 33 - initialize_q_table (not yet solved)
-# TODO: implement
+# Step 33 - initialize_q_table
+from collections import defaultdict
+
+def initialize_q_table():
+    """Create an empty Q-table that returns 0.0 for unseen (state, action) keys."""
+    # TODO: return a mapping where missing (state_key, action) lookups yield 0.0
+
+    q_table = defaultdict(float)
+
+    return q_table
 
 # Step 34 - get_q_value (not yet solved)
 # TODO: implement
