@@ -653,8 +653,25 @@ def epsilon_greedy_explore_move(legal_actions, rng):
 # Step 41 - epsilon_greedy_select_action (not yet solved)
 # TODO: implement
 
-# Step 42 - greedy_argmax_over_legal_actions (not yet solved)
-# TODO: implement
+# Step 42 - greedy_argmax_over_legal_actions
+def greedy_argmax_over_legal_actions(q_table, state_key, legal_actions, rng):
+    """Return the legal action with the highest Q-value (random tie-break)."""
+    # TODO: return the legal action with the highest Q(state_key, action)...
+    q_values = [
+        q_table.get((state_key, action), 0.0)
+        for action in legal_actions
+    ]
+
+    max_q = max(q_values)
+
+    best_actions = [
+        action
+        for action, q_value in zip(legal_actions, q_values)
+        if q_value == max_q
+    ]
+
+    index = rng.integers(len(best_actions))
+    return best_actions[index]
 
 # Step 43 - random_tie_break_argmax (not yet solved)
 # TODO: implement
