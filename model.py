@@ -575,8 +575,19 @@ def encode_board_state_key(board):
     
     return encoded
 
-# Step 32 - canonical_board_key (not yet solved)
-# TODO: implement
+# Step 32 - canonical_board_key
+def canonical_board_key(board):
+    # TODO: return the lex-smallest encoded key over all 8 symmetries of the board.
+
+    keys = []
+
+    for _ in range(4):
+        board = np.rot90(board)
+        keys.append(encode_board_state_key(board))
+        filp_board = np.flip(board)
+        keys.append(encode_board_state_key(filp_board))
+    
+    return min(keys)
 
 # Step 33 - initialize_q_table (not yet solved)
 # TODO: implement
