@@ -642,8 +642,13 @@ def epsilon_decay_schedule(initial_epsilon, episode_index, min_epsilon, decay_ra
 
     return max(min_epsilon, epsilon)
 
-# Step 40 - epsilon_greedy_explore_move (not yet solved)
-# TODO: implement
+# Step 40 - epsilon_greedy_explore_move
+def epsilon_greedy_explore_move(legal_actions, rng):
+    """Sample a uniformly random legal action from legal_actions using rng."""
+    # TODO: pick one action uniformly at random from legal_actions using rng
+
+    index = rng.integers(len(legal_actions))
+    return legal_actions[index]
 
 # Step 41 - epsilon_greedy_select_action (not yet solved)
 # TODO: implement
