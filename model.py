@@ -839,8 +839,36 @@ def episode_check_terminate(status):
 
     return status != 'ongoing'
 
-# Step 53 - train_q_learning_agent (not yet solved)
-# TODO: implement
+# Step 53 - train_q_learning_agent
+def train_q_learning_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsilon, decay_rate, opponent_policy, rng):
+    # TODO: run N Q-learning episodes vs opponent_policy, decay epsilon, return q_table and outcomes
+    
+    q_table = initialize_q_table()
+    episode_outcomes = []
+    agent_player = 1
+
+    for episode in range(num_episodes):
+        epsilon = epsilon_decay_schedule(initial_epsilon, episode, min_epsilon, decay_rate)
+        board, current_player = episode_reset_game()
+
+        while True:
+            state_key, action_index = episode_agent_pick_action(q_table, board, current_player, epsilon, rng)
+            stats = episode_apply_action(board, action_index, current_player, agent_player)
+            
+            if not stats['done']:
+                opponent_move = opponent_policy(stats['next_board'], stats['next_player'], rng)
+                stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
+
+            new_q = episode_apply_q_update(q_table, state_key, action_index, stats['reward'], stats['next_board'], stats['done'], alpha, gamma)
+
+            board = stats["next_board"]
+            current_player = stats["next_player"]
+
+            if stats['done']:
+                episode_outcomes.append(stats['status'])
+                break
+    
+    return {'q_table': q_table, 'episode_outcomes': episode_outcomes}
 
 # Step 54 - compute_batched_outcome_stats (not yet solved)
 # TODO: implement
