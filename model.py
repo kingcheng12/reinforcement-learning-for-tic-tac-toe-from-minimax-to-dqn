@@ -859,6 +859,8 @@ def train_q_learning_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsi
                 opponent_move = opponent_policy(stats['next_board'], stats['next_player'], rng)
                 stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
 
+            # stats['next_board'] represent the board when the next time agent take action
+            # we find the best results to update current board
             new_q = episode_apply_q_update(q_table, state_key, action_index, stats['reward'], stats['next_board'], stats['done'], alpha, gamma)
 
             board = stats["next_board"]
