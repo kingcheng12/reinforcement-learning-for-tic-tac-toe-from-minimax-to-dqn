@@ -1358,8 +1358,17 @@ def argmax_action_from_q_values(masked_q_values):
 
     return index
 
-# Step 71 - mse_loss_on_chosen_action (not yet solved)
-# TODO: implement
+# Step 71 - mse_loss_on_chosen_action
+import numpy as np
+
+def mse_loss_on_chosen_action(predicted_q, action_indices, target_q):
+    """MSE between Q(s, a_taken) and the bootstrapped target Q."""
+    # TODO: gather one Q-value per row using action_indices, then mean squared error vs target_q.
+
+    batch_indices = np.arange(predicted_q.shape[0])
+    chosen_q = predicted_q[batch_indices, action_indices]
+
+    return np.mean((chosen_q - target_q) ** 2)
 
 # Step 72 - mlp_backward_pass (not yet solved)
 # TODO: implement
