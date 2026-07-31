@@ -1237,8 +1237,16 @@ def deserialize_q_table_from_dict(serialized):
 
     return q_table
 
-# Step 64 - encode_board_flat_length_nine (not yet solved)
-# TODO: implement
+# Step 64 - encode_board_flat_length_nine
+import numpy as np
+
+def encode_board_flat_length_nine(board, current_player):
+    """Encode a 3x3 board as a length-9 float32 vector from current_player's view."""
+    # TODO: relabel pieces so own=+1, opponent=-1, empty=0, then flatten to (9,) float32
+    
+    perspective_board = flip_board_perspective(board, current_player)
+
+    return perspective_board.flatten().astype(np.float32)
 
 # Step 65 - encode_board_one_hot_length_eighteen (not yet solved)
 # TODO: implement
