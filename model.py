@@ -1213,8 +1213,15 @@ def inspect_q_values_for_state(q_table, board, current_player):
 
     return np.asarray(q_values, dtype = float)
 
-# Step 62 - serialize_q_table_to_dict (not yet solved)
-# TODO: implement
+# Step 62 - serialize_q_table_to_dict
+def serialize_q_table_to_dict(q_table):
+    """Convert a Q-table (str -> np.ndarray shape (9,)) into a plain dict (str -> list of floats)."""
+    # TODO: convert each numpy array value into a plain Python list of floats
+    out = {}
+    for key, val in q_table.items():
+        out[key] = np.astype(val, float).tolist()
+
+    return out
 
 # Step 63 - deserialize_q_table_from_dict (not yet solved)
 # TODO: implement
