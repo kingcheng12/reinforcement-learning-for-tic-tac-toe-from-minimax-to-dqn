@@ -955,8 +955,82 @@ def perspective_reward_sign(reward, acting_player, scoring_player):
 
     return sign * reward
 
-# Step 58 - train_q_agent_self_play (not yet solved)
-# TODO: implement
+# Step 58 - train_q_agent_self_play
+def train_q_agent_self_play(num_episodes, alpha, gamma, initial_epsilon, min_epsilon, decay_rate, rng):
+    # TODO: run num_episodes of self-play, applying Q-learning updates with perspective flipping.
+    q_table = initialize_q_table()
+    episode_outcomes = []
+
+    for episode in range(num_episodes):
+        epsilon = epsilon_decay_schedule(initial_epsilon, episode, min_epsilon, decay_rate)
+
+        result = self_play_episode(q_table, alpha, gamma, epsilon, rng) # only record moves but not update q_table
+        episode_outcomes.append(result["final_statusfinal_status"])
+        transitions = result["transitions"]
+
+        # update q_table
+        for transition in reversed(transitions):
+            state_key = transition["state_key"]
+            action = transition["action"]
+            player = transition["player"]
+            next_board = transition["next_board"]
+            done = transition["done"]
+
+            current_q = get_q_value(
+                q_table,
+                state_key,
+                action,
+            )
+            if done:
+                reward = (
+                    minimax_terminal_score(final_status)
+                    * perspective_reward_sign(player)
+                )
+                td_target = reward
+            else:
+                next_player = switch_player(player)
+                perspective_next_board = flip_board_perspective(
+                    next_board,
+                    next_player,
+                )
+                next_state_key = canonical_board_key(
+                    perspective_next_board
+                )
+
+                legal_moves = get_legal_moves(next_board)
+                legal_actions = [
+                    row * 3 + col
+                    for row, col in legal_moves
+                ]
+
+                if legal_actions:
+                    max_next_q = max(
+                        get_q_value(
+                            q_table,
+                            next_state_key,
+                            next_action,
+                        )
+                        for next_action in legal_actions
+                    )
+                else:
+                    max_next_q = 0.0
+
+                # reward = 0
+                td_target = -gamma * max_next_q
+
+            new_q = current_q + alpha * (td_target - current_q)
+
+            set_q_value(
+                q_table,
+                state_key,
+                action,
+                new_q,
+            )
+
+    return {
+        "q_table": q_table,
+        "episode_outcomes": episode_outcomes,
+    }
 
 # Step 59 - evaluate_q_agent_vs_random (not yet solved)
 # TODO: implement
