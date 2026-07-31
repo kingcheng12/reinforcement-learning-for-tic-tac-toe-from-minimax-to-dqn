@@ -1223,8 +1223,19 @@ def serialize_q_table_to_dict(q_table):
 
     return out
 
-# Step 63 - deserialize_q_table_from_dict (not yet solved)
-# TODO: implement
+# Step 63 - deserialize_q_table_from_dict
+import numpy as np
+
+def deserialize_q_table_from_dict(serialized):
+    """Rebuild a Q-table (state_key -> np.ndarray shape (9,)) from a plain dict."""
+    # TODO: convert each list value back into a numpy float array of shape (9,)
+    
+    q_table = {}
+
+    for key, val in serialized.items():
+        q_table[key] = np.asarray(val)
+
+    return q_table
 
 # Step 64 - encode_board_flat_length_nine (not yet solved)
 # TODO: implement
