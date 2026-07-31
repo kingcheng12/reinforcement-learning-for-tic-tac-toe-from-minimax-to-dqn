@@ -1114,8 +1114,76 @@ def evaluate_q_agent_vs_random(q_table, num_games, rng):
         "draw_rate": draw_rate,
     }
 
-# Step 60 - evaluate_q_agent_vs_minimax (not yet solved)
-# TODO: implement
+# Step 60 - evaluate_q_agent_vs_minimax
+def evaluate_q_agent_vs_minimax(q_table, num_games, rng):
+    # TODO: play num_games matches alternating X/O between Q-agent and minimax, return agent-perspective rates.
+    wins = 0
+    losses = 0
+    draws = 0
+
+    game = TicTacToeGame()
+
+    for game_index in range(num_games):
+        game.reset()
+        agent_player = 1 if game_index % 2 == 0 else -1
+        while not game.is_terminal():
+            current_player = game.current_player
+            if current_player == agent_player:
+                # q_table is trained with agent player as X
+                perspective_board = flip_board_perspective(
+                    game.board,
+                    current_player,
+                )
+                state_key = canonical_board_key(perspective_board)
+
+                legal_actions = [
+                    row * 3 + col
+                    for row, col in get_legal_moves(game.board)
+                ]
+                action = greedy_argmax_over_legal_actions(
+                    q_table,
+                    state_key,
+                    legal_actions,
+                    rng,
+                )
+            else:
+                _, move = minimax_alpha_beta(
+                    game.board,
+                    current_player,
+                    float("-inf"),
+                    float("inf"),
+                )
+                row, col = move
+                action = row * 3 + col
+
+            row, col = action//3, action%3
+            game.step(row, col)
+
+        if game.status == "draw":
+            draws += 1
+        elif (
+            game.status == "X_win" and agent_player == 1
+        ) or (
+            game.status == "O_win" and agent_player == -1
+        ):
+            wins += 1
+        else:
+            losses += 1
+
+    if num_games == 0:
+        win_rate = 0.0
+        loss_rate = 0.0
+        draw_rate = 0.0
+    else:
+        win_rate = wins / num_games
+        loss_rate = losses / num_games
+        draw_rate = draws / num_games
+
+    return {
+        "x_win_rate": win_rate,
+        "o_win_rate": loss_rate,
+        "draw_rate": draw_rate,
+    }
 
 # Step 61 - inspect_q_values_for_state (not yet solved)
 # TODO: implement
