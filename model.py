@@ -1264,8 +1264,11 @@ def encode_board_one_hot_length_eighteen(board, current_player):
         own.reshape(-1),
         opponent.reshape(-1),])
 
-# Step 66 - build_mlp_architecture (not yet solved)
-# TODO: implement
+# Step 66 - build_mlp_architecture
+def build_mlp_architecture(input_dim, hidden_dim, output_dim=9):
+    # TODO: return a dict describing input_dim -> hidden_dim -> output_dim layer sizes.
+    
+    return {'input_dim': input_dim, 'hidden_dim': hidden_dim, 'output_dim': output_dim}
 
 # Step 67 - initialize_mlp_parameters (not yet solved)
 # TODO: implement
