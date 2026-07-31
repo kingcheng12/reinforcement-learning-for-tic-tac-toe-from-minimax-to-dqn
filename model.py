@@ -1370,8 +1370,51 @@ def mse_loss_on_chosen_action(predicted_q, action_indices, target_q):
 
     return np.mean((chosen_q - target_q) ** 2)
 
-# Step 72 - mlp_backward_pass (not yet solved)
-# TODO: implement
+# Step 72 - mlp_backward_pass
+def mlp_backward_pass(params, cache, action_indices, target_q):
+    """Backprop MSE-on-chosen-action loss through the MLP and return param gradients."""
+    # TODO: compute gradients dW1, db1, dW2, db2 for the MSE-on-chosen-action loss
+
+    x = cache["x"]
+    z1 = cache["z1"]
+    h1 = cache["h1"]
+    predicted_q = cache["q"]
+
+    action_indices = np.asarray(action_indices, dtype=int)
+    target_q = np.asarray(target_q, dtype=np.float32)
+
+    batch_size = predicted_q.shape[0]
+    batch_indices = np.arange(batch_size)
+
+    chosen_q = predicted_q[batch_indices, action_indices]
+
+    # L = mean((chosen_q - target_q) ** 2)
+    d_chosen_q = (2.0 / batch_size) * (chosen_q - target_q)
+
+    # Only chosen actions receive gradients.
+    d_predicted_q = np.zeros_like(predicted_q)
+    d_predicted_q[batch_indices, action_indices] = d_chosen_q
+
+    # Output layer: predicted_q = h1 @ W2 + b2
+    dW2 = h1.T @ d_predicted_q
+    db2 = np.sum(d_predicted_q, axis=0)
+
+    # Propagate into hidden layer.
+    dh1 = d_predicted_q @ params["W2"].T
+
+    # ReLU derivative.
+    dz1 = dh1 * (z1 > 0)
+
+    # First layer: z1 = x @ W1 + b1
+    dW1 = x.T @ dz1
+    db1 = np.sum(dz1, axis=0)
+
+    return {
+        "W1": dW1,
+        "b1": db1,
+        "W2": dW2,
+        "b2": db2,
+    }
 
 # Step 73 - adam_update_step (not yet solved)
 # TODO: implement
