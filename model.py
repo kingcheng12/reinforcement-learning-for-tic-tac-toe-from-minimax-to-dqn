@@ -965,7 +965,8 @@ def train_q_agent_self_play(num_episodes, alpha, gamma, initial_epsilon, min_eps
         epsilon = epsilon_decay_schedule(initial_epsilon, episode, min_epsilon, decay_rate)
 
         result = self_play_episode(q_table, alpha, gamma, epsilon, rng) # only record moves but not update q_table
-        episode_outcomes.append(result["final_statusfinal_status"])
+        final_status = result["final_status"]
+        episode_outcomes.append(final_status)
         transitions = result["transitions"]
 
         # update q_table
@@ -982,10 +983,12 @@ def train_q_agent_self_play(num_episodes, alpha, gamma, initial_epsilon, min_eps
                 action,
             )
             if done:
-                reward = (
-                    minimax_terminal_score(final_status)
-                    * perspective_reward_sign(player)
-                )
+                if final_status == 'draw':
+                    reward = 0
+                else:
+                    scoring_player = 1 if final_status == "X_win" else -1
+                    score = minimax_terminal_score(final_status)
+                    reward = perspective_reward_sign(score, player, scoring_player)
                 td_target = reward
             else:
                 next_player = switch_player(player)
