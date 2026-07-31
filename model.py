@@ -1056,6 +1056,7 @@ def evaluate_q_agent_vs_random(q_table, num_games, rng):
         while not game.is_terminal():
             current_player = game.current_player
             if current_player == agent_player:
+                # q_table is trained with agent player as X
                 perspective_board = flip_board_perspective(
                     game.board,
                     current_player,
