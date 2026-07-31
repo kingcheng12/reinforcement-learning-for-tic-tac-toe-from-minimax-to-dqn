@@ -918,22 +918,13 @@ def self_play_episode(q_table, alpha, gamma, epsilon, rng):
     while True:
         state_key, action_index = episode_agent_pick_action(q_table, board, current_player, epsilon, rng)
         transition = episode_apply_action(board, action_index, current_player, current_player)
-
-        new_q = episode_apply_q_update(q_table,
-                                        state_key,
-                                        action_index,
-                                        transition['reward'],
-                                        transition['next_board'],
-                                        transition['done'],
-                                        alpha,
-                                        gamma)
         transitions.append({
             "state_key": state_key,
             "action": action_index,
-            "player": current_player,
             "reward": transition["reward"],
             "next_board": transition["next_board"],
             "done": transition["done"],
+            "player": current_player,
         })
 
         board = transition["next_board"]
