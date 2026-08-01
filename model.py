@@ -1630,8 +1630,24 @@ def dqn_select_action(online_params, state, legal_mask, epsilon, rng):
     
     return int(action)
 
-# Step 82 - dqn_train_step (not yet solved)
-# TODO: implement
+# Step 82 - dqn_train_step
+def dqn_train_step(online_params, target_params, adam_state, buffer, batch_size, gamma, lr, rng):
+    """Run one DQN minibatch update. Return (online_params, adam_state, loss)."""
+    # TODO: sample -> targets -> forward -> loss -> backward -> adam step
+
+    batch = sample_minibatch_from_buffer(buffer, batch_size, rng)
+
+    target = compute_target_q_with_target_network(target_params, batch, gamma)
+
+    predicted_q, cache = mlp_forward_pass(online_params, batch['states'])
+
+    loss = mse_loss_on_chosen_action(predicted_q, batch['actions'], target)
+
+    grads = mlp_backward_pass(online_params, cache, batch['actions'], target)
+
+    new_params, new_state = adam_update_step(online_params, grads, adam_state, learning_rate = lr)
+
+    return new_params, new_state, loss
 
 # Step 83 - train_dqn_agent (not yet solved)
 # TODO: implement
