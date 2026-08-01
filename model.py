@@ -1511,8 +1511,38 @@ def cap_buffer_size_drop_oldest(buffer):
 
     return buffer
 
-# Step 77 - sample_minibatch_from_buffer (not yet solved)
-# TODO: implement
+# Step 77 - sample_minibatch_from_buffer
+import numpy as np
+
+
+def sample_minibatch_from_buffer(buffer, batch_size, rng):
+    """Draw `batch_size` random transitions from `buffer` and stack fields into arrays."""
+    # TODO: draw a uniformly random minibatch of transitions and stack each field.
+    data = buffer["data"]
+    batch_indices = rng.choice(
+        len(data),
+        size=batch_size,
+        replace=True,
+    )
+
+    selected = [buffer['data'][int(i)] for i in batch_indices]
+
+    field_mapping = {
+        "states": "state",
+        "actions": "action",
+        "rewards": "reward",
+        "next_states": "next_state",
+        "dones": "done",
+        "next_legal_masks": "next_legal_mask",
+    }
+
+    return {
+        output_key: np.stack([
+            np.asarray(transition[input_key])
+            for transition in selected
+        ])
+        for output_key, input_key in field_mapping.items()
+    }
 
 # Step 78 - build_target_network_copy (not yet solved)
 # TODO: implement
