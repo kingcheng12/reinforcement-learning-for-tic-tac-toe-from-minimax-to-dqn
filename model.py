@@ -1485,8 +1485,17 @@ def create_replay_buffer(capacity):
 
     return {'data': data, 'capacity': capacity}
 
-# Step 75 - append_transition_to_buffer (not yet solved)
-# TODO: implement
+# Step 75 - append_transition_to_buffer
+def append_transition_to_buffer(buffer, state, action, reward, next_state, done, next_legal_mask):
+    """Append one (s, a, r, s', done, next_legal_mask) transition to the replay buffer."""
+    # TODO: store the transition tuple in buffer['data']
+    
+    data = (state, action, reward, next_state, done, next_legal_mask)
+
+    # note old data will be drop if reach maxlen
+    buffer['data'].append(data)
+
+    return buffer
 
 # Step 76 - cap_buffer_size_drop_oldest (not yet solved)
 # TODO: implement
