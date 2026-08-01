@@ -1649,8 +1649,136 @@ def dqn_train_step(online_params, target_params, adam_state, buffer, batch_size,
 
     return new_params, new_state, loss
 
-# Step 83 - train_dqn_agent (not yet solved)
-# TODO: implement
+# Step 83 - train_dqn_agent
+def train_dqn_agent(num_episodes, hidden_dim=64, gamma=0.99, lr=1e-3, batch_size=64, buffer_capacity=10000, sync_every_k=200, epsilon_start=1.0, epsilon_end=0.05, seed=0):
+    """Full DQN self-play training loop. Returns dict with online_params,
+    target_params, loss_history, reward_history, architecture."""
+    # TODO: run num_episodes of self-play, store transitions, train with Adam.
+
+    rng = np.random.default_rng(seed)
+    architecture = build_mlp_architecture(input_dim=9, hidden_dim=hidden_dim, output_dim=9)
+    online_params = initialize_mlp_parameters(architecture, seed)
+    target_params = build_target_network_copy(online_params)
+    adam_state = {}
+    buffer = create_replay_buffer(buffer_capacity)
+
+    loss_history = []
+    reward_history = []
+    for episode in range(num_episodes):
+        if num_episodes <= 1:
+            progress = 1.0
+        else:
+            progress = episode / (num_episodes - 1)
+        epsilon = epsilon_start+ progress * (epsilon_end - epsilon_start)
+
+        board, current_player = episode_reset_game()
+        episode_reward = 0.0
+        done = False
+
+        while not done:
+            # Encode from the acting player's perspective.
+            state = encode_board_flat_length_nine(
+                board,
+                current_player,
+            )
+            legal_moves = get_legal_moves(board)
+            legal_actions = [
+                row * 3 + col
+                for row, col in legal_moves
+            ]
+            legal_action_mask = np.zeros(9, dtype=bool)
+            legal_action_mask[legal_actions] = True
+
+            action = dqn_select_action(
+                online_params,
+                state,
+                legal_action_mask,
+                epsilon,
+                rng,
+            )
+
+            row = action // 3
+            col = action % 3
+
+            next_board = place_move(
+                board,
+                row,
+                col,
+                current_player,
+            )
+            status = get_game_status(next_board)
+            done = status != "ongoing"
+
+            # Reward from the acting player's perspective.
+            if done:
+                reward = (
+                    minimax_terminal_score(status)
+                    * current_player
+                )
+            else:
+                reward = 0.0
+            episode_reward += reward
+            next_player = switch_player(current_player)
+
+            next_state = encode_board_flat_length_nine(
+                next_board,
+                next_player,
+            )
+
+            if done:
+                next_legal_mask = np.zeros(9, dtype=bool)
+            else:
+                next_legal_mask = np.zeros(9, dtype=bool)
+
+                for next_row, next_col in get_legal_moves(next_board):
+                    next_action = next_row * 3 + next_col
+                    next_legal_mask[next_action] = True
+
+            transition = {
+                "state": state,
+                "action": action,
+                "reward": reward,
+                "next_state": next_state,
+                "done": done,
+                "next_legal_mask": next_legal_mask,
+            }
+            buffer["data"].append(transition)
+            cap_buffer_size_drop_oldest(buffer)
+            board = next_board
+            current_player = next_player
+
+
+        # Start training once one full minibatch is available.
+        if len(buffer["data"]) >= batch_size:
+            online_params, adam_state, loss = dqn_train_step(
+                online_params=online_params,
+                target_params=target_params,
+                adam_state=adam_state,
+                buffer=buffer,
+                batch_size=batch_size,
+                gamma=gamma,
+                lr=lr,
+                rng=rng,
+            )
+            loss_history.append(float(loss))
+
+        reward_history.append(float(episode_reward))
+
+        target_params = sync_target_network_periodically(
+            online_params,
+            target_params,
+            episode + 1,
+            sync_every_k,
+        )
+
+
+    return {
+        "online_params": online_params,
+        "target_params": target_params,
+        "loss_history": loss_history,
+        "reward_history": reward_history,
+        "architecture": architecture,
+    }
 
 # Step 84 - compare_dqn_tabular_random_minimax (not yet solved)
 # TODO: implement
