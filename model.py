@@ -1416,8 +1416,62 @@ def mlp_backward_pass(params, cache, action_indices, target_q):
         "b2": db2,
     }
 
-# Step 73 - adam_update_step (not yet solved)
-# TODO: implement
+# Step 73 - adam_update_step
+import numpy as np
+
+def adam_update_step(params, grads, adam_state, learning_rate=1e-3, beta1=0.9, beta2=0.999, eps=1e-8):
+    # TODO: perform one Adam step; update adam_state's moments and step counter, return (new_params, adam_state).
+
+    if not adam_state:
+        adam_state = {
+            "m": {
+                name: np.zeros_like(param)
+                for name, param in params.items()
+            },
+            "v": {
+                name: np.zeros_like(param)
+                for name, param in params.items()
+            },
+            "t": 0,
+        }
+
+    t = adam_state["t"] + 1
+    new_params = {}
+    new_m = {}
+    new_v = {}
+
+    for name, param in params.items():
+        grad = grads[name]
+
+        m = (
+            beta1 * adam_state["m"][name]
+            + (1.0 - beta1) * grad
+        )
+        v = (
+            beta2 * adam_state["v"][name]
+            + (1.0 - beta2) * grad ** 2
+        )
+
+        m_hat = m / (1.0 - beta1 ** t)
+        v_hat = v / (1.0 - beta2 ** t)
+
+        new_params[name] = (
+            param
+            - learning_rate
+            * m_hat
+            / (np.sqrt(v_hat) + eps)
+        )
+
+        new_m[name] = m
+        new_v[name] = v
+
+    new_state = {
+        "m": new_m,
+        "v": new_v,
+        "t": t,
+    }
+
+    return new_params, new_state
 
 # Step 74 - create_replay_buffer (not yet solved)
 # TODO: implement
