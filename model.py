@@ -1473,8 +1473,17 @@ def adam_update_step(params, grads, adam_state, learning_rate=1e-3, beta1=0.9, b
 
     return new_params, new_state
 
-# Step 74 - create_replay_buffer (not yet solved)
-# TODO: implement
+# Step 74 - create_replay_buffer
+from collections import deque
+
+
+def create_replay_buffer(capacity):
+    """Return an empty replay buffer with a fixed maximum capacity."""
+    # TODO: build a dict holding an empty bounded deque and the capacity
+
+    data = deque(maxlen = capacity)
+
+    return {'data': data, 'capacity': capacity}
 
 # Step 75 - append_transition_to_buffer (not yet solved)
 # TODO: implement
