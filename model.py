@@ -1780,8 +1780,159 @@ def train_dqn_agent(num_episodes, hidden_dim=64, gamma=0.99, lr=1e-3, batch_size
         "architecture": architecture,
     }
 
-# Step 84 - compare_dqn_tabular_random_minimax (not yet solved)
-# TODO: implement
+# Step 84 - compare_dqn_tabular_random_minimax
+def compare_dqn_tabular_random_minimax(dqn_artifacts, q_table, num_games=200):
+    """Round-robin evaluation among DQN, tabular Q, random, and minimax agents."""
+    # TODO: play num_games for each of the six pairings, alternating X, and report rates
+    online_params = dqn_artifacts["online_params"]
+    rng = np.random.default_rng(0)
+
+    agent_names = ["dqn", "tabular", "random", "minimax"]
+    pairings = [
+        ("dqn", "tabular"),
+        ("dqn", "random"),
+        ("dqn", "minimax"),
+        ("tabular", "random"),
+        ("tabular", "minimax"),
+        ("random", "minimax"),
+    ]
+
+    def choose_action(agent_name, board, player):
+        legal_moves = get_legal_moves(board)
+        legal_actions = [
+            row * 3 + col
+            for row, col in legal_moves
+        ]
+
+        if not legal_actions:
+            raise ValueError("No legal actions available")
+
+        if agent_name == "dqn":
+            state = encode_board_flat_length_nine(
+                board,
+                player,
+            )
+
+            legal_mask = np.zeros(9, dtype=bool)
+            legal_mask[legal_actions] = True
+
+            # Greedy evaluation: epsilon = 0.
+            return dqn_select_action(
+                online_params,
+                state,
+                legal_mask,
+                0.0,
+                rng,
+            )
+
+        if agent_name == "tabular":
+            perspective_board = flip_board_perspective(
+                board,
+                player,
+            )
+            state_key = canonical_board_key(
+                perspective_board
+            )
+
+            return greedy_argmax_over_legal_actions(
+                q_table,
+                state_key,
+                legal_actions,
+                rng,
+            )
+
+        if agent_name == "random":
+            row, col = random_move_agent(
+                board,
+                player,
+                rng,
+            )
+            return row * 3 + col
+
+        if agent_name == "minimax":
+            _, move = minimax_max_min_step(
+                board,
+                player,
+            )
+
+            if move is None:
+                raise RuntimeError(
+                    "Minimax returned no move on a nonterminal board"
+                )
+
+            row, col = move
+            return row * 3 + col
+
+        raise ValueError(f"Unknown agent: {agent_name}")
+
+    results = {}
+
+    for first_agent, second_agent in pairings:
+        wins = 0
+        losses = 0
+        draws = 0
+
+        for game_index in range(num_games):
+            game = TicTacToeGame()
+
+            # Alternate which agent plays X.
+            if game_index % 2 == 0:
+                x_agent = first_agent
+                o_agent = second_agent
+                first_agent_player = 1
+            else:
+                x_agent = second_agent
+                o_agent = first_agent
+                first_agent_player = -1
+
+            while not game.is_terminal():
+                current_agent = (
+                    x_agent
+                    if game.current_player == 1
+                    else o_agent
+                )
+
+                action = choose_action(
+                    current_agent,
+                    game.board,
+                    game.current_player,
+                )
+
+                row = action // 3
+                col = action % 3
+                game.step(row, col)
+
+            if game.status == "draw":
+                draws += 1
+            elif (
+                game.status == "X_win"
+                and first_agent_player == 1
+            ) or (
+                game.status == "O_win"
+                and first_agent_player == -1
+            ):
+                wins += 1
+            else:
+                losses += 1
+
+        if num_games == 0:
+            win_rate = 0.0
+            loss_rate = 0.0
+            draw_rate = 0.0
+        else:
+            win_rate = wins / num_games
+            loss_rate = losses / num_games
+            draw_rate = draws / num_games
+
+        pairing_name = f"{first_agent}_vs_{second_agent}"
+
+        results[pairing_name] = {
+            "wins": win_rate,
+            "losses": loss_rate,
+            "draws": draw_rate,
+        }
+
+    return results
 
 # Step 85 - sarsa_on_policy_update (not yet solved)
 # TODO: implement
