@@ -1607,8 +1607,28 @@ def sync_target_network_periodically(online_params, target_params, step_count, s
         target_params = build_target_network_copy(online_params)
     return target_params
 
-# Step 81 - dqn_select_action (not yet solved)
-# TODO: implement
+# Step 81 - dqn_select_action
+def dqn_select_action(online_params, state, legal_mask, epsilon, rng):
+    """Epsilon-greedy action index over the legal moves."""
+    # TODO: explore with prob epsilon (random legal action) else argmax of masked Q-values
+    
+    r = rng.random()
+
+    if r <= epsilon:
+        legal_actions = [i for i in range(len(legal_mask)) if legal_mask[i]]
+        action = rng.choice(legal_actions)
+    else:
+        q_values, cache = mlp_forward_pass(
+            online_params,
+            state,
+        )
+        masked_q_values = mask_illegal_actions_neg_inf(
+            q_values,
+            legal_mask,
+        )
+        action = np.argmax(masked_q_values, axis=-1)
+    
+    return int(action)
 
 # Step 82 - dqn_train_step (not yet solved)
 # TODO: implement
