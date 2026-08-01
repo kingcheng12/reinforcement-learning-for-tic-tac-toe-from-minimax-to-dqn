@@ -1544,8 +1544,18 @@ def sample_minibatch_from_buffer(buffer, batch_size, rng):
         for output_key, input_key in field_mapping.items()
     }
 
-# Step 78 - build_target_network_copy (not yet solved)
-# TODO: implement
+# Step 78 - build_target_network_copy
+import numpy as np
+import copy
+
+def build_target_network_copy(online_params):
+    """Return a deep copy of the online MLP parameter dict."""
+    # TODO: return a new dict whose arrays are independent copies of online_params
+
+    return {
+        key: value.copy().astype(np.float64)
+        for key, value in online.items()
+    }
 
 # Step 79 - compute_target_q_with_target_network (not yet solved)
 # TODO: implement
