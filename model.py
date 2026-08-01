@@ -1554,7 +1554,7 @@ def build_target_network_copy(online_params):
 
     return {
         key: value.copy().astype(np.float64)
-        for key, value in online.items()
+        for key, value in online_params.items()
     }
 
 # Step 79 - compute_target_q_with_target_network
