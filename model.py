@@ -1497,8 +1497,19 @@ def append_transition_to_buffer(buffer, state, action, reward, next_state, done,
 
     return buffer
 
-# Step 76 - cap_buffer_size_drop_oldest (not yet solved)
-# TODO: implement
+# Step 76 - cap_buffer_size_drop_oldest
+def cap_buffer_size_drop_oldest(buffer):
+    """Drop oldest transitions until len(buffer['data']) <= buffer['capacity']."""
+    # TODO: pop from the front of buffer['data'] until it fits the capacity.
+
+    if isinstance(buffer['data'], deque):
+        while len(buffer['data']) > buffer['capacity'] and len(buffer['data']) > 0:
+            buffer['data'].popleft()
+    elif isinstance(buffer['data'], list):
+        while len(buffer['data']) > buffer['capacity'] and len(buffer['data']) > 0:
+            buffer['data'].pop(0)
+
+    return buffer
 
 # Step 77 - sample_minibatch_from_buffer (not yet solved)
 # TODO: implement
