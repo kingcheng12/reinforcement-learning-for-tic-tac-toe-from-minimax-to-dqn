@@ -1596,8 +1596,16 @@ def compute_target_q_with_target_network(target_params, batch, gamma):
 
     return target_q
 
-# Step 80 - sync_target_network_periodically (not yet solved)
-# TODO: implement
+# Step 80 - sync_target_network_periodically
+import numpy as np
+
+def sync_target_network_periodically(online_params, target_params, step_count, sync_every_k):
+    """Copy online -> target every sync_every_k steps; otherwise leave target unchanged."""
+    # TODO: refresh target_params from online_params when step_count is a positive multiple of sync_every_k
+
+    if step_count > 0 and step_count % sync_every_k == 0:
+        target_params = build_target_network_copy(online_params)
+    return target_params
 
 # Step 81 - dqn_select_action (not yet solved)
 # TODO: implement
