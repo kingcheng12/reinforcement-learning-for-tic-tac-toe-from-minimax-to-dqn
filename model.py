@@ -2124,8 +2124,158 @@ def reinforce_policy_gradient_update(params, episode_cache, returns, adam_state,
 
     return new_params, new_adam_state
 
-# Step 90 - train_reinforce_agent (not yet solved)
-# TODO: implement
+# Step 90 - train_reinforce_agent
+def train_reinforce_agent(num_episodes, gamma, learning_rate, hidden_dim, opponent_policy, rng, init_seed=0):
+    # TODO: roll out episodes, sample masked-softmax actions, REINFORCE update per episode
+    architecture = build_mlp_architecture(
+        9,
+        hidden_dim,
+        9,
+    )
+    params = initialize_mlp_parameters(
+        architecture,
+        seed=init_seed,
+    )
+    adam_state = {}
+    episode_outcomes = []
+
+    for _ in range(num_episodes):
+        board, current_player = episode_reset_game()
+
+        states = []
+        actions = []
+        legal_masks = []
+        rewards = []
+        forward_caches = []
+
+        while True:
+            if current_player == 1:
+                # Encode from X's perspective.
+                state = encode_board_flat_length_nine(
+                    board,
+                    current_player,
+                )
+
+                legal_mask = np.zeros(9, dtype=bool)
+                for row, col in get_legal_moves(board):
+                    legal_mask[row * 3 + col] = True
+
+                logits, forward_cache = mlp_forward_pass(
+                    params,
+                    state[None, :],
+                )
+
+                logits = logits[0]
+
+                _, probabilities = reinforce_log_prob_of_action(
+                    logits,
+                    legal_mask,
+                    int(np.flatnonzero(legal_mask)[0]),
+                )
+
+                action = int(
+                    rng.choice(
+                        np.arange(9),
+                        p=probabilities,
+                    )
+                )
+
+                row = action // 3
+                col = action % 3
+                next_board = place_move(
+                    board,
+                    row,
+                    col,
+                    current_player,
+                )
+
+                status = get_game_status(next_board)
+                done = status != "ongoing"
+
+                if done:
+                    reward = minimax_terminal_score(status)
+                else:
+                    reward = 0.0
+
+                states.append(state)
+                actions.append(action)
+                legal_masks.append(legal_mask)
+                rewards.append(reward)
+
+                # Store one unbatched cache per agent action.
+                forward_caches.append({
+                    "x": forward_cache["x"][0],
+                    "z1": forward_cache["z1"][0],
+                    "h1": forward_cache["h1"][0],
+                    "predicted_q": logits,
+                })
+
+                board = next_board
+
+                if done:
+                    break
+
+                current_player = switch_player(current_player)
+
+            else:
+                opponent_move = opponent_policy(
+                    board,
+                    current_player,
+                    rng,
+                )
+
+                if isinstance(opponent_move, tuple):
+                    row, col = opponent_move
+                else:
+                    opponent_action = int(opponent_move)
+                    row = opponent_action // 3
+                    col = opponent_action % 3
+
+                board = place_move(
+                    board,
+                    row,
+                    col,
+                    current_player,
+                )
+
+                status = get_game_status(board)
+                done = status != "ongoing"
+
+                if done:
+                    # The terminal reward belongs to the latest recorded
+                    # agent transition.
+                    rewards[-1] = minimax_terminal_score(status)
+                    break
+
+                current_player = switch_player(current_player)
+
+        episode_outcomes.append(status)
+
+        returns = reinforce_collect_episode_returns(
+            rewards,
+            gamma,
+        )
+
+        episode_cache = {
+            "states": np.asarray(states, dtype=np.float32),
+            "actions": np.asarray(actions, dtype=int),
+            "legal_masks": np.asarray(legal_masks, dtype=bool),
+            "forward_caches": forward_caches,
+        }
+
+        params, adam_state = reinforce_policy_gradient_update(
+            params,
+            episode_cache,
+            returns,
+            adam_state,
+            learning_rate=learning_rate,
+        )
+
+    return {
+        "params": params,
+        "architecture": architecture,
+        "episode_outcomes": episode_outcomes,
+    }
 
 # Step 91 - compare_value_vs_policy_learners (not yet solved)
 # TODO: implement
