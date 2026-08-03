@@ -1950,8 +1950,52 @@ def sarsa_on_policy_update(q_table, state_key, action, reward, next_state_key, n
 
     return q_table
 
-# Step 86 - train_sarsa_agent (not yet solved)
-# TODO: implement
+# Step 86 - train_sarsa_agent
+def train_sarsa_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsilon, decay_rate, opponent_policy, rng):
+    # TODO: run num_episodes of on-policy SARSA vs opponent_policy; return q_table and outcomes
+    q_table = initialize_q_table()
+    episode_outcomes = []
+    agent_player = 1
+
+    for episode in range(num_episodes):
+        epsilon = epsilon_decay_schedule(initial_epsilon, episode, min_epsilon, decay_rate)
+        board, current_player = episode_reset_game()
+
+        while True:
+            # agent pick action
+            state_key, action_index = episode_agent_pick_action(q_table, board, current_player, epsilon, rng)
+            stats = episode_apply_action(board, action_index, current_player, agent_player)
+            
+            # opponent pick action
+            if not stats['done']:
+                opponent_move = opponent_policy(stats['next_board'], stats['next_player'], rng)
+                stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
+
+            if stats["done"]:
+                next_state_key = None
+                next_action = None
+            else:
+                # agent pick action again
+                next_state_key, next_action = episode_agent_pick_action(
+                    q_table,
+                    stats["next_board"],
+                    stats["next_player"],
+                    epsilon,
+                    rng,
+                )
+
+            q_table = sarsa_on_policy_update(q_table, state_key, action_index, stats['reward'], next_state_key, next_action, stats['done'], alpha, gamma)
+
+            board = stats["next_board"]
+            current_player = stats["next_player"]
+            state_key = next_state_key
+            action_index = next_action
+
+            if stats['done']:
+                episode_outcomes.append(stats['status'])
+                break
+    
+    return {'q_table': q_table, 'episode_outcomes': episode_outcomes}
 
 # Step 87 - reinforce_log_prob_of_action (not yet solved)
 # TODO: implement
