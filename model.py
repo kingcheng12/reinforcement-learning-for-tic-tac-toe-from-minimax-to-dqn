@@ -2014,8 +2014,21 @@ def reinforce_log_prob_of_action(logits, legal_action_mask, action):
 
     return log_prob_of_action, probs
 
-# Step 88 - reinforce_collect_episode_returns (not yet solved)
-# TODO: implement
+# Step 88 - reinforce_collect_episode_returns
+import numpy as np
+
+def reinforce_collect_episode_returns(rewards, gamma):
+    """Return discounted returns G_t for a REINFORCE episode as a numpy array of shape (T,)."""
+    # TODO: compute G_t = r_t + gamma * G_{t+1} for each timestep and return as np.ndarray.
+
+    disc_rewards = [0] * len(rewards)
+    g_t = 0
+
+    for i in range(len(rewards)-1, -1, -1):
+        g_t = rewards[i] + gamma * g_t
+        disc_rewards[i] = g_t
+    
+    return np.asarray(disc_rewards, dtype=float)
 
 # Step 89 - reinforce_policy_gradient_update (not yet solved)
 # TODO: implement
