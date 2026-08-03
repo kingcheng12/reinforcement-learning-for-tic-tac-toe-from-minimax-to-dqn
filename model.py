@@ -2288,6 +2288,104 @@ def train_reinforce_agent(num_episodes, gamma, learning_rate, hidden_dim, oppone
     }
 
 # Step 91 - compare_value_vs_policy_learners
+def evaluate_reinforce_agent(
+    params,
+    num_games,
+    opponent_policy,
+    rng,
+):
+    """Evaluate the greedy REINFORCE policy as X."""
+    wins = 0
+    losses = 0
+    draws = 0
+
+    for _ in range(num_games):
+        board, current_player = episode_reset_game()
+
+        while True:
+            if current_player == 1:
+                state = encode_board_flat_length_nine(
+                    board,
+                    current_player,
+                )
+
+                logits, _ = mlp_forward_pass(
+                    params,
+                    state[None, :],
+                )
+                logits = np.asarray(logits)[0]
+
+                legal_mask = np.zeros(9, dtype=bool)
+                for row, col in get_legal_moves(board):
+                    legal_mask[row * 3 + col] = True
+
+                masked_logits = np.where(
+                    legal_mask,
+                    logits,
+                    -np.inf,
+                )
+
+                # Greedy evaluation: no sampling.
+                action = int(np.argmax(masked_logits))
+                row, col = action // 3, action % 3
+
+            else:
+                opponent_move = opponent_policy(
+                    board,
+                    current_player,
+                    rng,
+                )
+
+                if isinstance(opponent_move, tuple):
+                    row, col = opponent_move
+                else:
+                    opponent_action = int(opponent_move)
+                    row = opponent_action // 3
+                    col = opponent_action % 3
+
+            board = place_move(
+                board,
+                row,
+                col,
+                current_player,
+            )
+
+            status = get_game_status(board)
+
+            if status != "ongoing":
+                break
+
+            current_player = switch_player(current_player)
+
+        if status == "X_win":
+            wins += 1
+        elif status == "O_win":
+            losses += 1
+        elif status == "draw":
+            draws += 1
+
+    if num_games == 0:
+        return {
+            "win_rate": 0.0,
+            "loss_rate": 0.0,
+            "draw_rate": 0.0,
+        }
+
+    return {
+        "win_rate": wins / num_games,
+        "loss_rate": losses / num_games,
+        "draw_rate": draws / num_games,
+    }
+
+def minimax_policy(board, player, rng):
+    """Return the minimax-selected move as a (row, col) tuple."""
+    score, move = minimax_max_min_step(board, player)
+
+    if move is None:
+        raise ValueError("Minimax policy was called on a terminal board")
+
+    return move
+
 def compare_value_vs_policy_learners(num_episodes=5000, eval_games=200, seed=0):
     """Train Q-learning, SARSA, REINFORCE under matched settings; return per-agent dicts."""
     # TODO: train each agent, evaluate vs random and minimax, build learning curves
