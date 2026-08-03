@@ -1979,7 +1979,7 @@ def train_sarsa_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsilon, 
                     opponent_action = opponent_row * 3 + opponent_col
                 else:
                     opponent_action = int(opponent_move)
-                stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
+                stats = episode_apply_action(stats['next_board'], opponent_action, stats['next_player'], agent_player)
 
             if stats["done"]:
                 next_state_key = None
