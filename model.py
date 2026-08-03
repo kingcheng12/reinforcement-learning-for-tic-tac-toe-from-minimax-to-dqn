@@ -1969,6 +1969,11 @@ def train_sarsa_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsilon, 
             # opponent pick action
             if not stats['done']:
                 opponent_move = opponent_policy(stats['next_board'], stats['next_player'], rng)
+                if isinstance(opponent_move, tuple):
+                    opponent_row, opponent_col = opponent_move
+                    opponent_action = opponent_row * 3 + opponent_col
+                else:
+                    opponent_action = int(opponent_move)
                 stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
 
             if stats["done"]:
@@ -2277,8 +2282,141 @@ def train_reinforce_agent(num_episodes, gamma, learning_rate, hidden_dim, oppone
         "episode_outcomes": episode_outcomes,
     }
 
-# Step 91 - compare_value_vs_policy_learners (not yet solved)
-# TODO: implement
+# Step 91 - compare_value_vs_policy_learners
+def compare_value_vs_policy_learners(num_episodes=5000, eval_games=200, seed=0):
+    """Train Q-learning, SARSA, REINFORCE under matched settings; return per-agent dicts."""
+    # TODO: train each agent, evaluate vs random and minimax, build learning curves
+    # Matched training settings.
+    alpha = 0.1
+    gamma = 0.99
+    initial_epsilon = 1.0
+    min_epsilon = 0.05
+    decay_rate = 0.001
+    reinforce_learning_rate = 1e-2
+    hidden_dim = 64
+
+    # Separate RNG streams make each experiment reproducible without
+    # coupling one learner's random draws to another learner.
+    q_rng = np.random.default_rng(seed)
+    sarsa_rng = np.random.default_rng(seed + 1)
+    reinforce_rng = np.random.default_rng(seed + 2)
+
+    q_eval_rng = np.random.default_rng(seed + 101)
+    sarsa_eval_rng = np.random.default_rng(seed + 102)
+    reinforce_eval_rng = np.random.default_rng(seed + 103)
+
+    # All agents train against the same type of opponent.
+    opponent_policy = random_move_agent
+
+    q_result = train_q_learning_agent(
+        num_episodes=num_episodes,
+        alpha=alpha,
+        gamma=gamma,
+        initial_epsilon=initial_epsilon,
+        min_epsilon=min_epsilon,
+        decay_rate=decay_rate,
+        opponent_policy=opponent_policy,
+        rng=q_rng,
+    )
+
+    sarsa_result = train_sarsa_agent(
+        num_episodes=num_episodes,
+        alpha=alpha,
+        gamma=gamma,
+        initial_epsilon=initial_epsilon,
+        min_epsilon=min_epsilon,
+        decay_rate=decay_rate,
+        opponent_policy=opponent_policy,
+        rng=sarsa_rng,
+    )
+
+    reinforce_result = train_reinforce_agent(
+        num_episodes=num_episodes,
+        gamma=gamma,
+        learning_rate=reinforce_learning_rate,
+        hidden_dim=hidden_dim,
+        opponent_policy=opponent_policy,
+        rng=reinforce_rng,
+        init_seed=seed,
+    )
+
+    q_vs_random = evaluate_q_agent_vs_random(
+        q_result["q_table"],
+        eval_games,
+        q_eval_rng,
+    )
+    q_vs_minimax = evaluate_q_agent_vs_minimax(
+        q_result["q_table"],
+        eval_games,
+        q_eval_rng,
+    )
+
+    sarsa_vs_random = evaluate_q_agent_vs_random(
+        sarsa_result["q_table"],
+        eval_games,
+        sarsa_eval_rng,
+    )
+    sarsa_vs_minimax = evaluate_q_agent_vs_minimax(
+        sarsa_result["q_table"],
+        eval_games,
+        sarsa_eval_rng,
+    )
+
+    reinforce_vs_random = evaluate_reinforce_agent(
+        reinforce_result["params"],
+        eval_games,
+        random_move_agent,
+        reinforce_eval_rng,
+    )
+    reinforce_vs_minimax = evaluate_reinforce_agent(
+        reinforce_result["params"],
+        eval_games,
+        minimax_policy,
+        reinforce_eval_rng,
+    )
+
+    def outcome_to_score(status):
+        """Convert an X-agent terminal status into -1, 0, or 1."""
+        if status == "X_win":
+            return 1.0
+        if status == "O_win":
+            return -1.0
+        if status == "draw":
+            return 0.0
+        raise ValueError(f"Unknown outcome: {status}")
+
+    return {
+        "q_learning": {
+            "win_rate_vs_random": float(q_vs_random["win_rate"]),
+            "draw_rate_vs_minimax": float(q_vs_minimax["draw_rate"]),
+            "learning_curve": [
+                outcome_to_score(status)
+                for status in q_result["episode_outcomes"]
+            ],
+        },
+        "sarsa": {
+            "win_rate_vs_random": float(sarsa_vs_random["win_rate"]),
+            "draw_rate_vs_minimax": float(
+                sarsa_vs_minimax["draw_rate"]
+            ),
+            "learning_curve": [
+                outcome_to_score(status)
+                for status in sarsa_result["episode_outcomes"]
+            ],
+        },
+        "reinforce": {
+            "win_rate_vs_random": float(
+                reinforce_vs_random["win_rate"]
+            ),
+            "draw_rate_vs_minimax": float(
+                reinforce_vs_minimax["draw_rate"]
+            ),
+            "learning_curve": [
+                outcome_to_score(status)
+                for status in reinforce_result["episode_outcomes"]
+            ],
+        },
+    }
 
 # Step 92 - symmetry_augmented_training (not yet solved)
 # TODO: implement
