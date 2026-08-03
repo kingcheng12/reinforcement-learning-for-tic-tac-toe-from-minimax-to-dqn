@@ -2030,8 +2030,99 @@ def reinforce_collect_episode_returns(rewards, gamma):
     
     return np.asarray(disc_rewards, dtype=float)
 
-# Step 89 - reinforce_policy_gradient_update (not yet solved)
-# TODO: implement
+# Step 89 - reinforce_policy_gradient_update
+def reinforce_policy_gradient_update(params, episode_cache, returns, adam_state, learning_rate=1e-2):
+    # TODO: Apply one REINFORCE update that ascends sum_t G_t * log pi(a_t|s_t) through the policy MLP.
+
+    states = np.asarray(episode_cache["states"], dtype=np.float32)
+    actions = np.asarray(episode_cache["actions"], dtype=int)
+    legal_masks = np.asarray(episode_cache["legal_masks"], dtype=bool)
+    forward_caches = episode_cache["forward_caches"]
+    returns = np.asarray(returns, dtype=np.float32)
+
+    num_steps = len(actions)
+
+    if len(returns) != num_steps:
+        raise ValueError("returns and actions must have the same length")
+
+    if states.shape[0] != num_steps:
+        raise ValueError("states and actions must have the same length")
+
+    # Recompute the forward pass when caches were not supplied.
+    if len(forward_caches) == 0:
+        logits_batch, cache = mlp_forward_pass(params, states)
+
+        # Convert the batched cache into one cache per time step.
+        forward_caches = [
+            {
+                "x": cache["x"][t],
+                "z1": cache["z1"][t],
+                "h1": cache["h1"][t],
+                "predicted_q": logits_batch[t],
+            }
+            for t in range(num_steps)
+        ]
+    elif len(forward_caches) != num_steps:
+        raise ValueError(
+            "forward_caches must be empty or contain one cache per step"
+        )
+
+    grads = {
+        name: np.zeros_like(value)
+        for name, value in params.items()
+    }
+
+    for t in range(num_steps):
+        cache = forward_caches[t]
+        action = actions[t]
+        legal_mask = legal_masks[t]
+        G_t = returns[t]
+
+        x = np.asarray(cache["x"])
+        z1 = np.asarray(cache["z1"])
+        h1 = np.asarray(cache["h1"])
+        logits = np.asarray(cache["predicted_q"])
+
+        _, probs = reinforce_log_prob_of_action(
+            logits,
+            legal_mask,
+            action,
+        )
+
+        # Gradient of loss: -G_t * log pi(a_t | s_t)
+        dlogits = probs.copy()
+        dlogits[action] -= 1.0
+        dlogits *= G_t
+
+        # Illegal actions do not participate in the policy.
+        dlogits[~legal_mask] = 0.0
+
+        # Output layer.
+        grads["W2"] += np.outer(h1, dlogits)
+        grads["b2"] += dlogits
+
+        # ReLU hidden layer.
+        dh1 = dlogits @ params["W2"].T
+        dz1 = dh1 * (z1 > 0)
+
+        # Input layer.
+        grads["W1"] += np.outer(x, dz1)
+        grads["b1"] += dz1
+
+    if num_steps > 0:
+        grads = {
+            name: grad / num_steps
+            for name, grad in grads.items()
+        }
+
+    new_params, new_adam_state = adam_update_step(
+        params,
+        grads,
+        adam_state,
+        learning_rate=learning_rate,
+    )
+
+    return new_params, new_adam_state
 
 # Step 90 - train_reinforce_agent (not yet solved)
 # TODO: implement
