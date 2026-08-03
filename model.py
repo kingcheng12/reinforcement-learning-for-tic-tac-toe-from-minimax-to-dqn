@@ -862,7 +862,7 @@ def train_q_learning_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsi
                     opponent_action = opponent_row * 3 + opponent_col
                 else:
                     opponent_action = int(opponent_move)
-                stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
+                stats = episode_apply_action(stats['next_board'], opponent_action, stats['next_player'], agent_player)
 
             # stats['next_board'] represent the board when the next time agent take action
             # we find the best results to update current board
