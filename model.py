@@ -857,6 +857,11 @@ def train_q_learning_agent(num_episodes, alpha, gamma, initial_epsilon, min_epsi
             
             if not stats['done']:
                 opponent_move = opponent_policy(stats['next_board'], stats['next_player'], rng)
+                if isinstance(opponent_move, tuple):
+                    opponent_row, opponent_col = opponent_move
+                    opponent_action = opponent_row * 3 + opponent_col
+                else:
+                    opponent_action = int(opponent_move)
                 stats = episode_apply_action(stats['next_board'], opponent_move, stats['next_player'], agent_player)
 
             # stats['next_board'] represent the board when the next time agent take action
