@@ -2521,6 +2521,117 @@ def compare_value_vs_policy_learners(num_episodes=5000, eval_games=200, seed=0):
         },
     }
 
-# Step 92 - symmetry_augmented_training (not yet solved)
-# TODO: implement
+# Step 92 - symmetry_augmented_training
+import numpy as np
+
+def symmetry_augmented_training(q_table, state_board, action, reward, next_state_board, done, alpha, gamma):
+    """Apply Q-learning updates to all 8 D4 symmetries of a transition."""
+    # TODO: for each of the 8 D4 symmetries, transform boards and action, then update
+
+    state_board = np.asarray(state_board)
+    next_state_board = np.asarray(next_state_board)
+
+    # Normalize the original action to (row, col).
+    if isinstance(action, tuple):
+        action_row, action_col = action
+    else:
+        action = int(action)
+        action_row, action_col = divmod(action, 3)
+
+    def transform_board_and_coord(board, row, col, rotation, reflect):
+        """Apply reflection, then counterclockwise rotations."""
+        transformed_board = board
+        transformed_row = row
+        transformed_col = col
+
+        # Reflect left-to-right.
+        if reflect:
+            transformed_board = np.fliplr(transformed_board)
+            transformed_col = 2 - transformed_col
+
+        # Apply rotation times 90 degrees counterclockwise.
+        for _ in range(rotation):
+            transformed_board = np.rot90(transformed_board)
+
+            # For a 3x3 board under 90° counterclockwise rotation:
+            # (row, col) -> (2 - col, row)
+            transformed_row, transformed_col = (
+                2 - transformed_col,
+                transformed_row,
+            )
+
+        return transformed_board, transformed_row, transformed_col
+
+    # Four rotations, each with and without reflection.
+    for reflect in (False, True):
+        for rotation in range(4):
+            transformed_state, transformed_row, transformed_col = (
+                transform_board_and_coord(
+                    state_board,
+                    action_row,
+                    action_col,
+                    rotation,
+                    reflect,
+                )
+            )
+
+            # The next board must receive exactly the same symmetry.
+            transformed_next_state, _, _ = transform_board_and_coord(
+                next_state_board,
+                0,
+                0,
+                rotation,
+                reflect,
+            )
+
+            transformed_action = transformed_row * 3 + transformed_col
+
+            state_key = encode_board_state_key(transformed_state)
+
+            current_q = get_q_value(
+                q_table,
+                state_key,
+                transformed_action,
+            )
+
+            if done:
+                target = reward
+            else:
+                next_state_key = encode_board_state_key(
+                    transformed_next_state
+                )
+
+                legal_next_actions = [
+                    row * 3 + col
+                    for row, col in get_legal_moves(
+                        transformed_next_state
+                    )
+                ]
+
+                if legal_next_actions:
+                    max_next_q = max(
+                        get_q_value(
+                            q_table,
+                            next_state_key,
+                            next_action,
+                        )
+                        for next_action in legal_next_actions
+                    )
+                else:
+                    max_next_q = 0.0
+
+                target = reward + gamma * max_next_q
+
+            updated_q = current_q + alpha * (
+                target - current_q
+            )
+
+            set_q_value(
+                q_table,
+                state_key,
+                transformed_action,
+                updated_q,
+            )
+
+    return q_table
 
